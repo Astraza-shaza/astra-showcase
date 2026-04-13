@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <title>Astra Mini App</title>
+
+  <!-- LZ-String: lossless compression for URL-safe payloads -->
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #0f0f0f;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    #shell-frame {
+      width: 100%; height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* Shown while decompressing / if something goes wrong */
+    #fallback {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #888;
+      gap: 12px;
+      text-align: center;
+      padding: 24px;
+    }
+    #fallback.visible { display: flex; }
+    #fallback h2 { color: #fff; font-size: 1.1rem; }
+    #fallback p  { font-size: 0.85rem; line-height: 1.5; }
+    #fallback code {
+      background: #1a1a1a; padding: 4px 8px; border-radius: 6px;
+      font-size: 0.75rem; color: #f87171; word-break: break-all;
+    }
+
+    /* Tiny loading bar while decompressing */
+    #loader {
+      position: fixed; top: 0; left: 0;
+      height: 3px; width: 0%;
+      background: linear-gradient(90deg, #7c3aed, #38bdf8);
+      transition: width 0.3s ease;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loader"></div>
+  <iframe id="shell-frame" sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-modals"></iframe>
+  <div id="fallback">
+    <h2>Nothing to render</h2>
+    <p>This page expects a compressed UI payload in the URL fragment.<br/>
+       If you're a developer, append <code>#&lt;lz-string payload&gt;</code> to the URL.</p>
+  </div>
+
+  <script>
+    (function () {
+      const loader  = document.getElementById('loader');
+      const frame   = document.getElementById('shell-frame');
+      const fallback = document.getElementById('fallback');
+
+      function setLoader(pct) {
+        loader.style.width = pct + '%';
+      }
+
+      function showFallback(msg) {
+        frame.style.display = 'none';
+        fallback.classList.add('visible');
+        if (msg) {
+          fallback.querySelector('p').textContent = msg;
+        }
+      }
+
+      function render(html) {
+        // Inject Telegram WebApp bridge so inner UI can call Telegram.WebApp.* if needed
+        const bridge = `<script>
+          window.Telegram = window.parent.Telegram || { WebApp: { close: function(){}, expand: function(){}, ready: function(){} } };
+        <\/script>`;
+
+        frame.srcdoc = bridge + html;
+        setLoader(100);
+        // Fade out loader after render
+        setTimeout(() => { loader.style.opacity = '0'; }, 400);
+      }
+
+      function init() {
+        setLoader(20);
+
+        // Support both hash (#payload) and query param (?ui=payload) for flexibility
+        let payload = null;
+
+        const hash = window.location.hash.slice(1);   // strip leading #
+        if (hash) {
+          payload = hash;
+        } else {
+          const params = new URLSearchParams(window.location.search);
+          payload = params.get('ui') || null;
+        }
+
+        if (!payload) {
+          showFallback();
+          return;
+        }
+
+        setLoader(50);
+
+        let html = null;
+        try {
+          // Try decompressFromEncodedURIComponent first (bot default)
+          html = LZString.decompressFromEncodedURIComponent(payload);
+
+          // Fallback: plain base64url decode (no compression)
+          if (!html || html.trim() === '') {
+            const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+            html = decodeURIComponent(atob(b64));
+          }
+        } catch (e) {
+          showFallback('Decompression failed: ' + e.message);
+          return;
+        }
+
+        if (!html || html.trim() === '') {
+          showFallback('Payload decoded to empty content. Make sure you used LZString.compressToEncodedURIComponent().');
+          return;
+        }
+
+        setLoader(85);
+        render(html);
+      }
+
+      // Run after LZ-String is guaranteed loaded
+      if (typeof LZString !== 'undefined') {
+        init();
+      } else {
+        document.querySelector('script[src*="lz-string"]').addEventListener('load', init);
+      }
+    })();
+  </script>
+
+</body>
+</html>
