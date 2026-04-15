@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#0a0a0f"/>
+  <title>Astra Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #13131a;
+      --surface2:  #1c1c28;
+      --border:    #2a2a3a;
+      --accent:    #7c3aed;
+      --accent2:   #38bdf8;
+      --accent3:   #34d399;
+      --warn:      #f59e0b;
+      --danger:    #f87171;
+      --text:      #e8e8f0;
+      --muted:     #6b6b80;
+      --radius:    14px;
+    }
+
+    html, body {
+      width: 100%; min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      overscroll-behavior: none;
+    }
+
+    /* ── Layout ── */
+    .page {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px 14px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .header-left { display: flex; flex-direction: column; gap: 2px; }
+    .header-greeting { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+    .header-name { font-size: 1.15rem; font-weight: 700; color: var(--text); }
+    .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .header-time { font-size: 1.1rem; font-weight: 700; color: var(--accent2); font-variant-numeric: tabular-nums; }
+    .header-date { font-size: 0.72rem; color: var(--muted); }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 2px;
+      margin-bottom: -6px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .card-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .card-title span.icon { font-size: 1rem; }
+
+    /* ── Goal rows ── */
+    .goal-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .goal-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .goal-item:first-child { padding-top: 0; }
+    .goal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .goal-name { font-size: 0.85rem; font-weight: 600; color: var(--text); flex: 1; }
+    .goal-badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-high   { background: rgba(124,58,237,0.2); color: #a78bfa; border: 1px solid rgba(124,58,237,0.35); }
+    .badge-medium { background: rgba(56,189,248,0.15); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.3); }
+    .badge-low    { background: rgba(107,107,128,0.2); color: var(--muted); border: 1px solid var(--border); }
+
+    .progress-row { display: flex; align-items: center; gap: 8px; }
+    .progress-bar-bg {
+      flex: 1;
+      height: 5px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 0.6s ease;
+    }
+    .progress-label { font-size: 0.7rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+    /* ── Todo rows ── */
+    .todo-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .todo-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .todo-item:first-child { padding-top: 0; }
+    .todo-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+    .todo-dot.high   { background: #a78bfa; box-shadow: 0 0 6px rgba(167,139,250,0.5); }
+    .todo-dot.medium { background: var(--accent2); }
+    .todo-dot.low    { background: var(--muted); }
+    .todo-text { font-size: 0.83rem; color: var(--text); line-height: 1.4; }
+
+    /* ── Stat grid ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .stat-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-label { font-size: 0.68rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat-value { font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .stat-sub   { font-size: 0.7rem; color: var(--muted); }
+    .color-purple { color: #a78bfa; }
+    .color-blue   { color: var(--accent2); }
+    .color-green  { color: var(--accent3); }
+    .color-warn   { color: var(--warn); }
+
+    /* ── Focus block ── */
+    .focus-block {
+      background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(56,189,248,0.08));
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .focus-label { font-size: 0.68rem; color: #a78bfa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+    .focus-text  { font-size: 0.9rem; font-weight: 600; color: var(--text); line-height: 1.4; }
+    .focus-sub   { font-size: 0.75rem; color: var(--muted); }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      font-size: 0.68rem;
+      color: var(--muted);
+      padding-top: 4px;
+    }
+    .footer span { color: #a78bfa; }
+
+    /* ── Pulse animation on live dot ── */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .live-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent3);
+      margin-right: 5px;
+      animation: pulse 2s ease-in-out infinite;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-greeting">Good morning</div>
+      <div class="header-name">Reese 👋</div>
+    </div>
+    <div class="header-right">
+      <div class="header-time" id="clock">--:--</div>
+      <div class="header-date" id="datestr">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="section-label">Overview</div>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Active Goals</div>
+      <div class="stat-value color-purple">5</div>
+      <div class="stat-sub">3 high priority</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Open Tasks</div>
+      <div class="stat-value color-blue">3</div>
+      <div class="stat-sub">All high priority</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">IT Career</div>
+      <div class="stat-value color-green">38%</div>
+      <div class="stat-sub">3 of 8 milestones</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Google Prep</div>
+      <div class="stat-value color-warn">0%</div>
+      <div class="stat-sub">0 of 7 milestones</div>
+    </div>
+  </div>
+
+  <!-- Today's Focus -->
+  <div class="focus-block">
+    <div class="focus-label"><span class="live-dot"></span>Today's Focus</div>
+    <div class="focus-text">Google Data Center Interview Prep 🎯</div>
+    <div class="focus-sub">3 study tasks pending — OS, Networking, Hardware</div>
+  </div>
+
+  <!-- Goals -->
+  <div class="section-label">Goals</div>
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Active Goals</div>
+
+    <div class="goal-item">
+      <div class="goal-header">
+        <div class="goal-name">Google Data Center Interview Prep</div>
+        <div class="goal-badge badge-high">High</div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:0%"></div></div>
+        <div class="progress-label">0 / 7</div>
+      </div>
+    </div>
+
+    <div class="goal-item">
+      <div class="goal-header">
+        <div class="goal-name">AI-Powered Income Generation</div>
+        <div class="goal-badge badge-high">High</div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:0%"></div></div>
+        <div class="progress-label">0 / 8</div>
+      </div>
+    </div>
+
+    <div class="goal-item">
+      <div class="goal-header">
+        <div class="goal-name">Swing Trading Agent — Alpaca</div>
+        <div class="goal-badge badge-high">High</div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:0%"></div></div>
+        <div class="progress-label">0 / 8</div>
+      </div>
+    </div>
+
+    <div class="goal-item">
+      <div class="goal-header">
+        <div class="goal-name">Career Transition to IT Role</div>
+        <div class="goal-badge badge-medium">Medium</div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:38%"></div></div>
+        <div class="progress-label">3 / 8</div>
+      </div>
+    </div>
+
+    <div class="goal-item">
+      <div class="goal-header">
+        <div class="goal-name">1300W Sprint Roadbike Goal</div>
+        <div class="goal-badge badge-low">Low</div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:0%"></div></div>
+        <div class="progress-label">0 / 4</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Todos -->
+  <div class="section-label">Tasks</div>
+  <div class="card">
+    <div class="card-title"><span class="icon">✅</span> Pending To-Dos</div>
+
+    <div class="todo-item">
+      <div class="todo-dot high"></div>
+      <div class="todo-text">📚 Study OS Specialization — CLI commands, diagnostics, boot process, systemd</div>
+    </div>
+    <div class="todo-item">
+      <div class="todo-dot high"></div>
+      <div class="todo-text">📚 Study Networking Specialization — OSI model, TCP/IP, DNS, subnetting, troubleshooting</div>
+    </div>
+    <div class="todo-item">
+      <div class="todo-dot high"></div>
+      <div class="todo-text">📚 Study Hardware Specialization — server components, RAID, IPMI, data center layout</div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">Powered by <span>Astra</span> · Updated on load</div>
+
+</div>
+
+<script>
+  // Live clock (Kansas City = America/Chicago)
+  function updateClock() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', {
+      timeZone: 'America/Chicago',
+      hour: '2-digit', minute: '2-digit', hour12: true
+    });
+    const dateStr = now.toLocaleDateString('en-US', {
+      timeZone: 'America/Chicago',
+      weekday: 'short', month: 'short', day: 'numeric'
+    });
+    const hour = parseInt(now.toLocaleString('en-US', { timeZone: 'America/Chicago', hour: 'numeric', hour12: false }));
+
+    document.getElementById('clock').textContent = timeStr;
+    document.getElementById('datestr').textContent = dateStr;
+
+    // Dynamic greeting
+    const greetEl = document.querySelector('.header-greeting');
+    if (hour >= 5 && hour < 12)       greetEl.textContent = 'Good morning';
+    else if (hour >= 12 && hour < 17) greetEl.textContent = 'Good afternoon';
+    else if (hour >= 17 && hour < 21) greetEl.textContent = 'Good evening';
+    else                               greetEl.textContent = 'Hey night owl';
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+</script>
+</body>
+</html>
